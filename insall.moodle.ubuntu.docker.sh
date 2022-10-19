@@ -1,6 +1,12 @@
 apt-get update
 apt-get install docker.io
 
+
+sudo systemctl start docker
+
+sudo systemctl enable docker
+
+
 docker network create moodle-network
 
 docker pull mariadb
