@@ -1,0 +1,53 @@
+version: '3'
+ 
+services:
+    mariadb:
+        image: mariadb:10
+        container_name: db
+        environment: 
+            MYSQL_RANDOM_ROOT_PASSWORD: 1
+            MYSQL_DATABASE: moodle
+            MYSQL_USER: moodle
+            MYSQL_PASSWORD: [secret MariaDB password]
+        volumes:
+            - /home/data/FQDN/mariadb:/var/lib/mysql
+    moodle:
+        image: oeru/moodle:php74-fpm
+        environment:
+            MOODLE_DOMAIN: FQDN
+            MOODLE_DB_HOST: mariadb
+            MYSQL_PORT_3306_TCP: 3306
+            MOODLE_DB_NAME: moodle
+            MOODLE_DB_USER: moodle
+            MOODLE_DB_PASSWORD: [secret MariaDB password]
+        volumes:
+            - /home/data/FQDN/src:/var/www/html
+            - /home/data/FQDN/data:/var/www/moodledata
+        restart: unless-stopped
+        depends_on:
+            - mariadb
+    cron:
+        image: oeru/moodle-cron:php74-fpm
+        environment:
+            MOODLE_DOMAIN: FQDN
+            MOODLE_DB_HOST: mariadb
+            MYSQL_PORT_3306_TCP: 3306
+            MOODLE_DB_NAME: moodle
+            MOODLE_DB_USER: moodle
+            MOODLE_DB_PASSWORD: [secret MariaDB password]
+        volumes:
+            - /home/data/FQDN/src:/var/www/html
+            - /home/data/FQDN/data:/var/www/moodledata
+        restart: unless-stopped
+        depends_on:
+            - mariadb
+    nginx:
+        image: nginx
+        depends_on:
+            - moodle
+        ports:
+            - 127.0.0.1:8080:80
+        volumes:
+            - /home/data/FQDN/nginx:/etc/nginx/conf.d
+            - /home/data/FQDN/src:/var/www/html
+        restart: unless-stopped
